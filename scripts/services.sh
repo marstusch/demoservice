@@ -13,13 +13,20 @@ SERVICES=(
 
 usage() {
   cat <<USAGE
-Usage: $(basename "$0") <start|stop|status|restart>
+Usage: $(basename "$0") <start|stop|status|restart|logs> [service] [--follow]
 
 Commands:
-  start    Build all services and start them in the background
-  stop     Stop all running services started by this script
-  status   Show status of each service
-  restart  Stop then start all services
+  start           Build all services and start them in the background
+  stop            Stop all running services started by this script
+  status          Show status of each service
+  restart         Stop then start all services
+  logs            Show logs of one service or all services
+
+Logs command examples:
+  $(basename "$0") logs                          # print all logs once
+  $(basename "$0") logs --follow                 # follow all logs live
+  $(basename "$0") logs first-name-service       # print one service log
+  $(basename "$0") logs hello-orchestrator-service --follow
 USAGE
 }
 
@@ -36,6 +43,25 @@ service_log_file() {
 is_running() {
   local pid="$1"
   kill -0 "$pid" >/dev/null 2>&1
+}
+
+is_known_service() {
+  local target="$1"
+  for entry in "${SERVICES[@]}"; do
+    IFS=":" read -r service _ <<<"$entry"
+    if [[ "$service" == "$target" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+print_missing_log_hint() {
+  local service="$1"
+  local log_file
+  log_file="$(service_log_file "$service")"
+  echo "[WARN] Keine Logdatei für $service gefunden: $log_file"
+  echo "       Starte den Service zuerst mit ./scripts/services.sh start"
 }
 
 start_services() {
@@ -141,6 +167,75 @@ status_services() {
   done
 }
 
+show_logs() {
+  mkdir -p "$LOG_DIR"
+
+  local service="all"
+  local follow="false"
+
+  if [[ "${1:-}" == "--follow" ]]; then
+    follow="true"
+    shift
+  fi
+
+  if [[ -n "${1:-}" ]]; then
+    service="$1"
+    shift
+  fi
+
+  if [[ "${1:-}" == "--follow" ]]; then
+    follow="true"
+    shift
+  fi
+
+  if [[ "$service" == "all" ]]; then
+    local files=()
+    for entry in "${SERVICES[@]}"; do
+      IFS=":" read -r svc _ <<<"$entry"
+      local log_file
+      log_file="$(service_log_file "$svc")"
+      if [[ -f "$log_file" ]]; then
+        files+=("$log_file")
+      else
+        print_missing_log_hint "$svc"
+      fi
+    done
+
+    if [[ ${#files[@]} -eq 0 ]]; then
+      echo "[ERROR] Keine Logdateien gefunden."
+      exit 1
+    fi
+
+    if [[ "$follow" == "true" ]]; then
+      echo "[INFO] Folge Logs von allen Services (Ctrl+C zum Beenden)..."
+      tail -n 100 -f "${files[@]}"
+    else
+      tail -n 200 "${files[@]}"
+    fi
+    return
+  fi
+
+  if ! is_known_service "$service"; then
+    echo "[ERROR] Unbekannter Service: $service"
+    echo "        Erlaubt: first-name-service | last-name-service | hello-orchestrator-service | all"
+    exit 1
+  fi
+
+  local log_file
+  log_file="$(service_log_file "$service")"
+  if [[ ! -f "$log_file" ]]; then
+    print_missing_log_hint "$service"
+    exit 1
+  fi
+
+  if [[ "$follow" == "true" ]]; then
+    echo "[INFO] Folge Logs von $service (Ctrl+C zum Beenden)..."
+    tail -n 100 -f "$log_file"
+  else
+    tail -n 200 "$log_file"
+  fi
+}
+
 main() {
   local cmd="${1:-}"
   case "$cmd" in
@@ -156,6 +251,10 @@ main() {
     restart)
       stop_services
       start_services
+      ;;
+    logs)
+      shift || true
+      show_logs "$@"
       ;;
     *)
       usage

@@ -16,7 +16,7 @@ Dieses Repository enthält drei Quarkus-Microservices:
 - `first-name-service` (Port `8081`)
 - `last-name-service` (Port `8082`)
 - `hello-orchestrator-service` (Port `8080`)
-- `scripts/services.sh` (Start/Stop/Status aller Services)
+- `scripts/services.sh` (Start/Stop/Status/Logs aller Services)
 
 ## Logging im JSON-Format
 
@@ -66,6 +66,30 @@ Das Script beendet zuerst regulär per `kill` und nutzt nur bei Bedarf ein `kill
 ```bash
 ./scripts/services.sh restart
 ```
+
+### Logs anzeigen (wichtig für Logging-Tests)
+
+Du kannst dir die Service-Logs jederzeit direkt in der Shell anzeigen lassen:
+
+```bash
+./scripts/services.sh logs
+```
+
+Live-Mitschnitt aller Services (fortlaufend, ideal für Library-Tests):
+
+```bash
+./scripts/services.sh logs --follow
+```
+
+Nur einen einzelnen Service ansehen:
+
+```bash
+./scripts/services.sh logs first-name-service
+./scripts/services.sh logs last-name-service --follow
+./scripts/services.sh logs hello-orchestrator-service --follow
+```
+
+Hinweis: Wenn noch keine Logdatei existiert, zeigt das Script einen Hinweis an, dass du die Services zuerst starten musst.
 
 ## Orchestrierungsservice aufrufen (Hauptendpoint)
 

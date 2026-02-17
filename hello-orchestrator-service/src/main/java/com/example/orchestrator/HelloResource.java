@@ -1,0 +1,37 @@
+package com.example.orchestrator;
+
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import com.example.orchestrator.client.FirstNameClient;
+import com.example.orchestrator.client.LastNameClient;
+import com.example.orchestrator.model.FirstNameResponse;
+import com.example.orchestrator.model.HelloResponse;
+import com.example.orchestrator.model.LastNameResponse;
+
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+
+@Path("/hello")
+@Produces(MediaType.APPLICATION_JSON)
+public class HelloResource {
+
+    @Inject
+    @RestClient
+    FirstNameClient firstNameClient;
+
+    @Inject
+    @RestClient
+    LastNameClient lastNameClient;
+
+    @GET
+    public HelloResponse hello() {
+        FirstNameResponse firstName = firstNameClient.randomFirstName();
+        LastNameResponse lastName = lastNameClient.randomLastName();
+
+        String message = "Hallo " + firstName.firstName() + " " + lastName.lastName() + "!";
+        return new HelloResponse(message, firstName.firstName(), lastName.lastName());
+    }
+}

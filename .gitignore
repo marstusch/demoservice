@@ -1,0 +1,32 @@
+# Maven
+/target/
+**/target/
+
+# Quarkus
+.quarkus/
+
+# Runtime files
+.run/
+logs/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Env files
+.env
+.env.*
+
+# Build helper files
+.mvn/wrapper/maven-wrapper.jar

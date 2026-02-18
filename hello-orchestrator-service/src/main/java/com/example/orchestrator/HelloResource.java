@@ -1,5 +1,7 @@
 package com.example.orchestrator;
 
+import de.mtgz.logging.Logger;
+import de.mtgz.logging.LoggerFactory;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.example.orchestrator.client.FirstNameClient;
@@ -28,8 +30,11 @@ public class HelloResource {
 
     @GET
     public HelloResponse hello() {
+        Logger logger = LoggerFactory.getLogger(HelloResource.class);
         FirstNameResponse firstName = firstNameClient.randomFirstName();
         LastNameResponse lastName = lastNameClient.randomLastName();
+        logger.info("firstName: " + firstName);
+        logger.info("lastName: " + lastName);
 
         String message = "Hallo " + firstName.firstName() + " " + lastName.lastName() + "!";
         return new HelloResponse(message, firstName.firstName(), lastName.lastName());

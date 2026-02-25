@@ -1,20 +1,17 @@
 package com.example.orchestrator;
 
-import de.mtgz.logging.Logger;
-import de.mtgz.logging.LoggerFactory;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 import com.example.orchestrator.client.FirstNameClient;
 import com.example.orchestrator.client.LastNameClient;
 import com.example.orchestrator.model.FirstNameResponse;
 import com.example.orchestrator.model.HelloResponse;
 import com.example.orchestrator.model.LastNameResponse;
-
+import de.mtgz.logging.Logger;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @Path("/hello")
 @Produces(MediaType.APPLICATION_JSON)
@@ -28,9 +25,11 @@ public class HelloResource {
     @RestClient
     LastNameClient lastNameClient;
 
+    @Inject
+    Logger logger;
+
     @GET
     public HelloResponse hello() {
-        Logger logger = LoggerFactory.getLogger(HelloResource.class);
         FirstNameResponse firstName = firstNameClient.randomFirstName();
         LastNameResponse lastName = lastNameClient.randomLastName();
         logger.info("firstName: " + firstName);
